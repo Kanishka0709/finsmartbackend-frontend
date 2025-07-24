@@ -15,16 +15,22 @@ function AppContent() {
     '/investments',
     '/stocks',
     '/tax',
+    '/reports',
+    '/settings',
+    '/help',
     // add more if needed
   ];
   const isDashboardRoute = dashboardPaths.some(path => location.pathname.startsWith(path));
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar
-        onMenuClick={() => setSidebarOpen(true)}
-        showHamburger={isDashboardRoute}
-      />
+      {/* Hide Navbar on dashboard pages */}
+      {!isDashboardRoute && (
+        <Navbar
+          onMenuClick={() => setSidebarOpen(true)}
+          showHamburger={isDashboardRoute}
+        />
+      )}
       <div className="flex-grow">
         <AppRoutes sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       </div>

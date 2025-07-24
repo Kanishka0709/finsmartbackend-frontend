@@ -7,3 +7,5 @@ export const updateTaxProfile = (id, profile) => axiosInstance.put(`/taxprofiles
 export const deleteTaxProfile = (id) => axiosInstance.delete(`/taxprofiles/${id}`);
 
 
+
+

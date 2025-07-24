@@ -1,152 +1,319 @@
-import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useEffect, useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
+import { FaWallet, FaChartLine, FaPiggyBank, FaFileInvoiceDollar } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+// Import API functions
+import { getAllExpenses } from '../api/expenseApi';
+import { getAllStocks } from '../api/stockApi';
+import { getTaxProfiles } from '../api/taxProfileApi';
+import { getIncome } from '../api/incomeApi'; // For investments, if you have a separate API, use that instead
+import { PieLabelRenderProps } from 'recharts'; // for type hinting if needed
+import { AiOutlineInfoCircle } from 'react-icons/ai';
+import { MdFormatAlignJustify } from 'react-icons/md';
 
-const summaryCards = [
-  {
-    title: 'Total Balance',
-    value: '₹2,45,000',
-    desc: 'All accounts combined',
-    color: 'from-blue-500 to-cyan-400',
-  },
-  {
-    title: 'Expense This Month',
-    value: '₹12,000',
-    desc: 'Spent so far',
-    color: 'from-purple-500 to-indigo-400',
-  },
-  {
-    title: 'Investment Growth',
-    value: '+8.2%',
-    desc: 'This year',
-    color: 'from-green-400 to-emerald-400',
-  },
-  {
-    title: 'Tax Profile',
-    value: 'Active',
-    desc: 'Up to date',
-    color: 'from-yellow-400 to-orange-300',
-  },
-];
-
-const transactions = [
-  { id: 1, purpose: 'Grocery Shopping', date: '2024-06-01', amount: '-₹2,000', status: 'Done' },
-  { id: 2, purpose: 'Salary Credited', date: '2024-06-01', amount: '+₹50,000', status: 'Done' },
-  { id: 3, purpose: 'Stock Purchase', date: '2024-05-30', amount: '-₹5,000', status: 'Pending' },
-  { id: 4, purpose: 'Tax Refund', date: '2024-05-28', amount: '+₹1,200', status: 'Failed' },
-];
-
-const chartData = [
-  { month: 'Jan', Expenses: 12000, Investments: 8000 },
-  { month: 'Feb', Expenses: 9000, Investments: 10000 },
-  { month: 'Mar', Expenses: 15000, Investments: 12000 },
-  { month: 'Apr', Expenses: 11000, Investments: 9000 },
-  { month: 'May', Expenses: 13000, Investments: 14000 },
-  { month: 'Jun', Expenses: 10000, Investments: 16000 },
+const overviewCards = [
+  { title: 'Expenses Overview', color: '#29b6f6', icon: <FaWallet size={36} color="#29b6f6" style={{ background: '#e3f4fd', borderRadius: '50%', padding: 8, marginRight: 18 }} /> },
+  { title: 'Investments Overview', color: '#7e8ce0', icon: <FaPiggyBank size={36} color="#7e8ce0" style={{ background: '#f0f2fd', borderRadius: '50%', padding: 8, marginRight: 18 }} /> },
+  { title: 'Stocks Overview', color: '#6c47e0', icon: <FaChartLine size={36} color="#6c47e0" style={{ background: '#ede8fd', borderRadius: '50%', padding: 8, marginRight: 18 }} /> },
+  { title: 'TaxProfile Overview', color: '#90caf9', icon: <FaFileInvoiceDollar size={36} color="#90caf9" style={{ background: '#eaf6fd', borderRadius: '50%', padding: 8, marginRight: 18 }} /> },
 ];
 
 export default function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Example: get username from localStorage (customize as needed)
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const username = user.username || 'User';
+
+  // State for chart data
+  const [pieData, setPieData] = useState([]);
+  const [lineData, setLineData] = useState([]);
+  const [barData, setBarData] = useState([]);
+
+  // Totals for overview cards
+  const [totalExpenses, setTotalExpenses] = useState(0);
+  const [totalInvestments, setTotalInvestments] = useState(0);
+  const [totalStocks, setTotalStocks] = useState(0);
+  const [totalTax, setTotalTax] = useState(0);
+
+  // Fetch totals for each overview
+  useEffect(() => {
+    getAllExpenses().then(res => {
+      const expenses = res.data || [];
+      setTotalExpenses(expenses.reduce((sum, e) => sum + (e.amount || 0), 0));
+    });
+    getAllStocks().then(res => {
+      const stocks = res.data || [];
+      setTotalStocks(stocks.reduce((sum, s) => sum + (s.currentPrice || s.price || 0), 0));
+    });
+    getTaxProfiles().then(res => {
+      const profiles = res.data || [];
+      setTotalTax(profiles.reduce((sum, t) => sum + (t.taxPaid || 0), 0));
+    });
+    // For investments, if you have a separate API, use it. Here, using incomes as a placeholder.
+    getIncome && getIncome().then(res => {
+      let investments = [];
+      if (Array.isArray(res.data)) {
+        investments = res.data;
+      } else if (res.data && Array.isArray(res.data.incomes)) {
+        investments = res.data.incomes;
+      } else if (res.data) {
+        investments = [res.data];
+      }
+      setTotalInvestments(investments.reduce((sum, i) => sum + (i.amount || 0), 0));
+    });
+  }, []);
+
+  // Pie Chart: Expenses by category
+  useEffect(() => {
+    getAllExpenses().then(res => {
+      const expenses = res.data || [];
+      // Group by category
+      const grouped = expenses.reduce((acc, curr) => {
+        const cat = curr.category || 'Other';
+        acc[cat] = (acc[cat] || 0) + (curr.amount || 0);
+        return acc;
+      }, {});
+      setPieData(Object.entries(grouped).map(([name, value]) => ({ name, value })));
+    }).catch(() => setPieData([]));
+  }, []);
+
+  // Line Chart: Stocks (mock time series if not present)
+  useEffect(() => {
+    getAllStocks().then(res => {
+      const stocks = res.data || [];
+      // If stocks have a date or time, use it; else, mock by index
+      const data = stocks.map((s, idx) => ({
+        name: s.name || `Stock ${idx + 1}`,
+        Value: s.currentPrice || s.price || 0,
+        idx
+      }));
+      setLineData(data);
+    }).catch(() => setLineData([]));
+  }, []);
+
+  // Bar Chart: Tax Profile (tax paid by year or type)
+  useEffect(() => {
+    getTaxProfiles().then(res => {
+      const profiles = res.data || [];
+      // Group by financialYear (not year)
+      const grouped = profiles.reduce((acc, curr) => {
+        const year = curr.financialYear || 'Unknown';
+        acc[year] = (acc[year] || 0) + (curr.taxPaid || 0);
+        return acc;
+      }, {});
+      setBarData(Object.entries(grouped).map(([name, value]) => ({ name, value })));
+    }).catch(() => setBarData([]));
+  }, []);
+
+  const navigate = useNavigate();
+
+  // Card click handlers
+  const handleCardClick = (idx) => {
+    switch (idx) {
+      case 0:
+        navigate('/expenses');
+        break;
+      case 1:
+        navigate('/investments');
+        break;
+      case 2:
+        navigate('/stocks');
+        break;
+      case 3:
+        navigate('/tax');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const pieColors = ['#29b6f6', '#7e8ce0', '#90caf9', '#6c47e0', '#fbc02d', '#e57373'];
+
+  // Helper for Pie Chart label
+  const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value }) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    return (
+      <text x={x} y={y} fill="#222" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={14} fontWeight={600}>
+        {`${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+      </text>
+    );
+  };
+
+  // Helper for Bar Chart label
+  const renderBarLabel = (props) => {
+    const { x, y, width, value } = props;
+    return (
+      <text x={x + width / 2} y={y - 8} fill="#222" textAnchor="middle" fontSize={13} fontWeight={600}>
+        {value}
+      </text>
+    );
+  };
+
+  // For bar colors
+  const barColors = ['#29b6f6', '#7e8ce0', '#90caf9', '#6c47e0', '#fbc02d', '#e57373'];
+
+  // Add a currency formatter
+  const formatCurrency = (value) => `₹${value.toLocaleString('en-IN')}`;
+
   return (
-    <div className="bg-gray-50 min-h-screen flex relative">
-      {/* Overlay for mobile sidebar */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-30 md:hidden transition-opacity duration-300"
-          onClick={() => setSidebarOpen(false)}
-          aria-label="Close sidebar overlay"
-        />
-      )}
-      <Sidebar open={sidebarOpen} />
-      <div className="flex-1 flex flex-col">
-        <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'pl-60' : 'pl-4'} pt-16 p-6 md:p-10 bg-gray-50`}>
-          {/* Sidebar Toggle Button */}
-          <button
-            className="absolute top-6 left-4 z-50 bg-white border border-gray-200 shadow rounded-full p-2 flex items-center justify-center hover:bg-blue-100 transition md:hidden"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+    <div style={{ background: '#f5f7fa', minHeight: '100vh', width: '100%', padding: '24px 0' }}>
+      {/* Welcome Message */}
+      <div style={{ fontSize: 28, fontWeight: 800, color: '#1976d2', marginBottom: 24, marginLeft: 24 }}>
+        Welcome, {username}!
+      </div>
+      {/* Overview Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: 28,
+        marginBottom: 32,
+        padding: '0 24px',
+        width: '100%',
+        maxWidth: 1600,
+        boxSizing: 'border-box',
+      }}>
+        {overviewCards.map((card, idx) => (
+          <div
+            key={card.title}
+            onClick={() => handleCardClick(idx)}
+            style={{
+              background: '#fff',
+              border: `3px solid ${card.color}`,
+              borderRadius: 28,
+              minHeight: 170,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '28px 18px 22px 18px',
+              color: '#222',
+              fontWeight: 700,
+              fontSize: 22,
+              boxShadow: '0 2px 16px #0001',
+              transition: 'box-shadow 0.2s, transform 0.2s',
+              minWidth: 220,
+              flex: 1,
+              cursor: 'pointer',
+              outline: 'none',
+              userSelect: 'none',
+            }}
+            onMouseOver={e => e.currentTarget.style.boxShadow = `0 4px 24px ${card.color}33`}
+            onMouseOut={e => e.currentTarget.style.boxShadow = '0 2px 16px #0001'}
+            tabIndex={0}
           >
-            {sidebarOpen ? (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-              </svg>
-            )}
-          </button>
-          {/* Welcome and Add Transaction */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-              <p className="text-gray-500">Welcome, [User Name]!</p>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
+              {card.icon}
             </div>
-            <button className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-semibold px-6 py-2 rounded-xl shadow hover:scale-105 transition">
-              + Add Transaction
-            </button>
+            <span style={{ textAlign: 'center', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>{card.title}</span>
+            <span style={{
+              display: 'block',
+              textAlign: 'center',
+              fontSize: 22,
+              fontWeight: 800,
+              color: card.color,
+              background: '#f5f7fa',
+              borderRadius: 12,
+              padding: '4px 18px',
+              boxShadow: '0 1px 4px #0001',
+              marginTop: 4,
+            }}>
+              {idx === 0 && `₹${totalExpenses.toLocaleString('en-IN')}`}
+              {idx === 1 && `₹${totalInvestments.toLocaleString('en-IN')}`}
+              {idx === 2 && `₹${totalStocks.toLocaleString('en-IN')}`}
+              {idx === 3 && `₹${totalTax.toLocaleString('en-IN')}`}
+            </span>
           </div>
-
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {summaryCards.map((card, idx) => (
-              <div
-                key={idx}
-                className={`rounded-2xl shadow-lg p-6 text-white bg-gradient-to-br ${card.color} flex flex-col gap-2`}
-              >
-                <div className="text-lg font-semibold">{card.title}</div>
-                <div className="text-3xl font-extrabold">{card.value}</div>
-                <div className="text-xs opacity-80">{card.desc}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Chart and Transactions */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Expense Trend Chart */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 col-span-1 lg:col-span-2 flex flex-col">
-              <div className="text-lg font-semibold text-blue-900 mb-2">Expense Trend (6 months)</div>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="Expenses" fill="#00C6FF" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="Investments" fill="#43a047" radius={[8, 8, 0, 0]} />
-                </BarChart>
+        ))}
+      </div>
+      {/* Charts Area */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr',
+        gap: 28,
+        padding: '0 24px',
+        maxWidth: 1600,
+        margin: '0 auto',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, minWidth: 0 }}>
+          {/* Pie Chart Card */}
+          <div style={{ background: '#fff', borderRadius: 28, padding: 0, boxShadow: '0 2px 16px #0001', minHeight: 400, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start', flex: 1 }}>
+            <div style={{ padding: '18px 18px 0 18px', borderBottom: '1px solid #f0f0f0' }}>
+              <div style={{ fontWeight: 700, fontSize: 20, color: '#1976d2' }}>Expenses Breakdown</div>
+              <div style={{ fontSize: 14, color: '#666', marginTop: 2 }}>This pie chart shows the distribution of your expenses by category.</div>
+            </div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320, minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height={320} minWidth={200} minHeight={200}>
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={renderPieLabel} labelLine={false}>
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value, name) => [`₹${value}`, name]} />
+                  <Legend verticalAlign="bottom" height={36} />
+                </PieChart>
               </ResponsiveContainer>
             </div>
-            {/* Latest Transactions */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="text-lg font-semibold text-blue-900 mb-4">Latest Transactions</div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-white rounded-xl">
-                  <thead>
-                    <tr className="bg-blue-50 text-blue-700">
-                      <th className="py-2 px-4">Purpose</th>
-                      <th className="py-2 px-4">Date</th>
-                      <th className="py-2 px-4">Amount</th>
-                      <th className="py-2 px-4">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map(tx => (
-                      <tr key={tx.id} className="border-b hover:bg-blue-50">
-                        <td className="py-2 px-4 font-semibold text-gray-800">{tx.purpose}</td>
-                        <td className="py-2 px-4">{tx.date}</td>
-                        <td className={`py-2 px-4 font-bold ${tx.amount.startsWith('+') ? 'text-green-500' : 'text-red-500'}`}>{tx.amount}</td>
-                        <td className="py-2 px-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${tx.status === 'Done' ? 'bg-green-100 text-green-700' : tx.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{tx.status}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          </div>
+          {/* Line Chart Card */}
+          <div style={{ background: '#fff', borderRadius: 28, padding: 0, boxShadow: '0 2px 16px #0001', minHeight: 400, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start', flex: 1 }}>
+            <div style={{ padding: '18px 18px 0 18px', borderBottom: '1px solid #f0f0f0' }}>
+              <div style={{ fontWeight: 700, fontSize: 20, color: '#1976d2' }}>Stock Value Over Time</div>
+              <div style={{ fontSize: 14, color: '#666', marginTop: 2 }}>This line chart visualizes your stock portfolio values.</div>
+            </div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320, minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height={320} minWidth={200} minHeight={200}>
+                <LineChart data={lineData} margin={{ top: 16, right: 24, left: 0, bottom: 24 }}>
+                  <XAxis dataKey="name" label={{ value: 'Stock', position: 'insideBottom', offset: -10 }} tick={{ fontSize: 13 }} />
+                  <YAxis label={{ value: 'Value (₹)', angle: -90, position: 'insideLeft', offset: 10 }} tick={{ fontSize: 13 }} />
+                  <Tooltip formatter={(value, name) => [`₹${value}`, name]} />
+                  <Legend verticalAlign="top" height={36} />
+                  <Line type="monotone" dataKey="Value" stroke="#29b6f6" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 5 }} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        </main>
+        </div>
+        {/* Improved Bar Chart Card */}
+        <div style={{ background: '#fff', borderRadius: 28, padding: 0, boxShadow: '0 2px 16px #0001', minHeight: 400, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start', flex: 1 }}>
+          <div style={{ padding: '18px 18px 0 18px', borderBottom: '1px solid #f0f0f0' }}>
+            <div style={{ fontWeight: 700, fontSize: 20, color: '#1976d2', letterSpacing: 0.5 }}>Tax Trends by Year</div>
+            <div style={{ fontSize: 14, color: '#666', marginTop: 2, marginBottom: 4 }}>
+              Visualize your annual tax payments and spot trends at a glance.
+            </div>
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320, minWidth: 0, position: 'relative', padding: 8 }}>
+            {barData.length === 0 ? (
+              <div style={{ position: 'absolute', top: 60, left: 0, right: 0, textAlign: 'center', color: '#e57373', fontWeight: 600, fontSize: 16, zIndex: 2 }}>
+                No tax data available for the selected period.
+              </div>
+            ) : null}
+            <ResponsiveContainer width="100%" height={320} minWidth={200} minHeight={200}>
+              <BarChart data={barData} margin={{ top: 16, right: 24, left: 0, bottom: 24 }} barCategoryGap={40}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis dataKey="name" label={{ value: 'Year', position: 'insideBottom', offset: -10, fontWeight: 700, fill: '#1976d2' }} tick={{ fontSize: 14, fontWeight: 600, fill: '#333' }} />
+                <YAxis label={{ value: 'Tax Paid (₹)', angle: -90, position: 'insideLeft', offset: 10, fontWeight: 700, fill: '#1976d2' }} tick={{ fontSize: 14, fontWeight: 600, fill: '#333' }} tickFormatter={formatCurrency} />
+                <Tooltip contentStyle={{ background: '#fff', border: '1px solid #1976d2', borderRadius: 8, fontWeight: 600 }} formatter={(value, name) => [formatCurrency(value), 'Tax Paid']} labelStyle={{ color: '#1976d2', fontWeight: 700 }} />
+                {/* No legend for clean look */}
+                <Bar dataKey="value" fill="url(#taxBarGradient)" radius={[8, 8, 0, 0]} label={({ x, y, width, value }) => (
+                  <text x={x + width / 2} y={y - 10} fill="#1976d2" textAnchor="middle" fontSize={15} fontWeight={700} style={{ textShadow: '0 1px 4px #fff8' }}>
+                    {formatCurrency(value)}
+                  </text>
+                )} isAnimationActive shadow="true" />
+                <defs>
+                  <linearGradient id="taxBarGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#29b6f6" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#1976d2" stopOpacity={0.8} />
+                  </linearGradient>
+                </defs>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
     </div>
   );

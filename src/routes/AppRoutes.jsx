@@ -10,6 +10,11 @@ import Expenses from '../pages/Expenses';
 import Investment from '../pages/Investment';
 import StockPortfolio from '../pages/StockPortfolio';
 import TaxProfile from '../pages/TaxProfile';
+import Reports from '../pages/Reports';
+import Settings from '../pages/Settings';
+import Help from '../pages/Help';
+import ForgotPassword from '../pages/ForgotPassword';
+import ResetPassword from '../pages/ResetPassword';
 
 // Auth wrapper
 import RequireAuth from '../components/RequireAuth';
@@ -21,6 +26,8 @@ function AppRoutes({ sidebarOpen, setSidebarOpen }) {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Protected Dashboard Layout Routes */}
       <Route
@@ -35,9 +42,11 @@ function AppRoutes({ sidebarOpen, setSidebarOpen }) {
         <Route path="/investments" element={<Investment />} />
         <Route path="/stocks" element={<StockPortfolio />} />
         <Route path="/tax" element={<TaxProfile />} />
-        {/* Add more dashboard-related routes here if needed */}
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/help" element={<Help />} />
       </Route>
-      </Routes>
+    </Routes>
   );
 }
 

@@ -21,7 +21,6 @@ function Navbar({ onMenuClick, showHamburger }) {
         )}
         <img src={logo} alt="Finsmart Logo" className="logo-square" />
         <span className="brand-name">Finsmart Finances</span>
-        <input type="text" className="navbar-search" placeholder="Search Finsmart..." />
       </div>
       <div className="navbar-right">
         <Link to="/dashboard" className="nav-btn">Dashboard</Link>

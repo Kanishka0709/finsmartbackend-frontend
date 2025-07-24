@@ -1,52 +1,76 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import '../styles/SidebarCustom.css';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { FaHome, FaMoneyBillWave, FaChartLine, FaChartPie, FaFileAlt, FaCog, FaQuestionCircle } from 'react-icons/fa';
+import { MdOutlineAssessment } from 'react-icons/md';
+import { BsBarChart } from 'react-icons/bs';
+import './Sidebar.css';
 
-const navItems = [
-  { to: '/dashboard', icon: '🏠', label: 'Dashboard' },
-  { to: '/expenses', icon: '💸', label: 'Expenses' },
-  { to: '/investments', icon: '📈', label: 'Investments' },
-  { to: '/stocks', icon: '📊', label: 'Stocks' },
-  { to: '/tax', icon: '🧾', label: 'Tax Profile' },
-  { to: '/reports', icon: '📑', label: 'Reports' },
-  { to: '/settings', icon: '⚙️', label: 'Settings' },
-  { to: '/help', icon: '❓', label: 'Help' },
+const menuItems = [
+  { icon: <FaHome size={28} color="#ff8800" />, label: 'Dashboard', route: '/dashboard' },
+  { icon: <FaMoneyBillWave size={28} color="#00b894" />, label: 'Expenses', route: '/expenses' },
+  { icon: <FaChartLine size={28} color="#6c5ce7" />, label: 'Investments', route: '/investments' },
+  { icon: <BsBarChart size={28} color="#0984e3" />, label: 'Stocks', route: '/stocks' },
+  { icon: <MdOutlineAssessment size={28} color="#fdcb6e" />, label: 'Tax Profile', route: '/tax' },
+  { icon: <FaFileAlt size={28} color="#636e72" />, label: 'Reports', route: '/reports' },
+  { icon: <FaCog size={28} color="#00b894" />, label: 'Settings', route: '/settings' },
+  { icon: <FaQuestionCircle size={28} color="#d63031" />, label: 'Help', route: '/help' },
 ];
 
-export default function Sidebar({ open = true }) {
+export default function Sidebar() {
+  const navigate = useNavigate();
   const location = useLocation();
   return (
-    <aside
-      className={`finsmart-sidebar transition-transform duration-300 z-40
-        ${open ? 'translate-x-0' : '-translate-x-full'}
-        md:translate-x-0
-      `}
-    >
-      <div>
-        <div className="flex items-center gap-3 mb-8 px-4">
-          {/* Removed logo image */}
-          <span className="font-bold text-lg text-white tracking-wide">Finsmart</span>
-        </div>
-        <nav className="flex flex-col gap-1">
-          {navItems.map(item => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`sidebar-link${location.pathname === item.to ? ' active' : ''}`}
-            >
-              <span className="text-xl">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-      </div>
-      <div className="sidebar-footer flex flex-col gap-2 items-center px-4 mt-8">
-        <div className="flex items-center gap-2">
-          <span className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-blue-700 font-bold">A</span>
-          <span className="text-gray-100 font-semibold">Alex</span>
-        </div>
-        <Link to="/logout" className="text-red-400 text-sm mt-2 hover:underline">Sign Out</Link>
-      </div>
+    <aside className="sidebar-custom">
+      {/* Menu Items */}
+      <nav style={{ width: '100%' }}>
+        {menuItems.map((item) => (
+          <Link
+            to={item.route}
+            key={item.label}
+            className={`sidebar-item${location.pathname.startsWith(item.route) ? ' active' : ''}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+              padding: '12px 32px',
+              fontSize: 22,
+              fontFamily: 'Comic Sans MS, Comic Sans, cursive',
+              textDecoration: 'none',
+              transition: 'background 0.2s',
+              borderRadius: 12,
+              marginBottom: 4,
+            }}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+      {/* Sign Out Button */}
+      <button
+        style={{
+          background: 'linear-gradient(90deg, #2d0bff 0%, #38b6ff 100%)',
+          color: '#fff',
+          fontWeight: 600,
+          fontSize: 18,
+          border: 'none',
+          borderRadius: 16,
+          padding: '12px 36px',
+          marginBottom: 12,
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px #0002',
+          transition: 'background 0.2s',
+        }}
+        onMouseOver={e => (e.currentTarget.style.background = '#fff')}
+        onMouseOut={e => (e.currentTarget.style.background = 'linear-gradient(90deg, #2d0bff 0%, #38b6ff 100%)')}
+        onClick={() => {
+          navigate('/login');
+        }}
+      >
+        Sign Out
+      </button>
     </aside>
   );
 } 
