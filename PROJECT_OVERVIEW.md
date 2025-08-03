@@ -2,36 +2,41 @@
 
 ## 📋 Project Structure
 
-This is a full-stack financial management application with separate repositories for frontend and backend:
+This is a full-stack financial management application with both frontend and backend in the same repository:
 
-### 🎨 **Frontend Repository**
-- **Repository**: https://github.com/devashri26/finsmartbackend-frontend
+### 🎨 **Frontend (Main Branch)**
 - **Technology**: React.js, JavaScript, CSS3
-- **Location**: `C:\Users\devag\Downloads\React Project\finsmart-frontend`
+- **Location**: Root directory of the repository
+- **Branch**: `main`
 
-### ⚙️ **Backend Repository**
-- **Repository**: https://github.com/devashri26/finsmart-backend
+### ⚙️ **Backend (Backend Branch)**
 - **Technology**: Spring Boot, Java, MySQL
-- **Location**: `C:\Users\devag\Downloads\Finsmart_Finances-master new\Finsmart_Finances-master`
+- **Location**: Backend branch of the repository
+- **Branch**: `backend`
 
 ## 🚀 Quick Start Guide
 
-### 1. **Backend Setup**
+### 1. **Clone the Repository**
 ```bash
-# Clone the backend repository
-git clone https://github.com/devashri26/finsmart-backend.git
-cd finsmart-backend
+# Clone the main repository
+git clone https://github.com/devashri26/finsmartbackend-frontend.git
+cd finsmartbackend-frontend
+```
+
+### 2. **Backend Setup**
+```bash
+# Switch to backend branch
+git checkout backend
 
 # Open in your IDE (IntelliJ IDEA, Eclipse, or VS Code)
 # Configure MySQL database in application.properties
 # Run the Spring Boot application
 ```
 
-### 2. **Frontend Setup**
+### 3. **Frontend Setup**
 ```bash
-# Clone the frontend repository
-git clone https://github.com/devashri26/finsmartbackend-frontend.git
-cd finsmartbackend-frontend
+# Switch back to main branch for frontend
+git checkout main
 
 # Install dependencies
 npm install
@@ -199,7 +204,8 @@ This project is licensed under the MIT License.
 
 ## 🔗 Quick Links
 
-- **Frontend Repository**: https://github.com/devashri26/finsmartbackend-frontend
-- **Backend Repository**: https://github.com/devashri26/finsmart-backend
+- **Main Repository**: https://github.com/devashri26/finsmartbackend-frontend
+- **Frontend Branch**: `main`
+- **Backend Branch**: `backend`
 - **Live Demo**: [Coming Soon]
 - **Documentation**: [Coming Soon] 
