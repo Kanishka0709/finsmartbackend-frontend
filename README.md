@@ -1,70 +1,153 @@
-# Getting Started with Create React App
+# Finsmart Finances - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive financial management web application built with React.js that helps users track expenses, investments, stocks, and tax profiles.
 
-## Available Scripts
+## 🚀 Features
 
-In the project directory, you can run:
+### 📊 **Dashboard & Analytics**
+- Interactive financial dashboard with charts and statistics
+- Real-time overview of expenses, investments, stocks, and tax data
+- Visual breakdowns using pie charts, bar charts, and line charts
 
-### `npm start`
+### 💰 **Expense Management**
+- Add, edit, and delete expenses with categories
+- PDF download functionality for expense reports
+- Expense tracking with detailed analytics
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 📈 **Investment Tracking**
+- Manage investment goals and SIP (Systematic Investment Plans)
+- Track investment transactions with pagination
+- PDF download for investment reports
+- SIP Calculator for planning investments
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 📊 **Stock Portfolio**
+- Stock holdings and transaction management
+- Portfolio value tracking
+- PDF download for stock reports
+- Sector-wise portfolio breakdown
 
-### `npm test`
+### 📋 **Tax Profile Management**
+- Tax profile creation and management
+- Yearly tax statistics
+- Outstanding reports tracking
+- PDF download for tax reports
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 📄 **Comprehensive Reports**
+- Detailed financial reports combining all data
+- PDF download for comprehensive reports
+- Investment transaction pagination
 
-### `npm run build`
+### 🔐 **User Authentication**
+- Secure login and signup system
+- "Remember me" functionality
+- Forgot password with email validation
+- Password reset functionality
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 🎨 **Modern UI/UX**
+- Responsive design for all devices
+- Modern card-based layout
+- Toast notifications for user feedback
+- Consistent design system with CSS variables
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🛠️ Technologies Used
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- **Frontend**: React.js, JavaScript (ES6+)
+- **Styling**: CSS3, CSS Variables, Responsive Design
+- **Charts**: Recharts library
+- **Icons**: React Icons
+- **HTTP Client**: Axios
+- **Routing**: React Router DOM
 
-### `npm run eject`
+## 📦 Installation
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/devashri26/finsmartbackend-frontend.git
+   cd finsmart-frontend
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+3. **Start the development server**
+   ```bash
+   npm start
+   ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+4. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-## Learn More
+## 🚀 Available Scripts
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- `npm start` - Runs the app in development mode
+- `npm test` - Launches the test runner
+- `npm run build` - Builds the app for production
+- `npm run eject` - Ejects from Create React App (one-way operation)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 📁 Project Structure
 
-### Code Splitting
+```
+src/
+├── api/                 # API configuration and endpoints
+├── components/          # Reusable UI components
+├── pages/              # Main application pages
+├── routes/             # Routing configuration
+├── styles/             # CSS stylesheets
+└── index.js            # Application entry point
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🔧 Configuration
 
-### Analyzing the Bundle Size
+The application connects to a Spring Boot backend. Make sure to:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+1. Update API endpoints in `src/api/axiosConfig.js` if needed
+2. Configure CORS settings on the backend
+3. Set up proper environment variables for production
 
-### Making a Progressive Web App
+## 📱 Features Overview
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### PDF Downloads
+- **Expenses**: Download all expenses with summary
+- **Investments**: Download investment goals and transactions
+- **Stocks**: Download stock holdings and transactions
+- **Tax Profiles**: Download tax profiles and summaries
+- **Reports**: Download comprehensive financial reports
 
-### Advanced Configuration
+### Pagination
+- Smart pagination with ellipsis for large datasets
+- Implemented in Reports and Investment pages
+- User-friendly navigation controls
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Authentication
+- Secure login with "Remember me" functionality
+- Email validation for forgot password
+- User session management
 
-### Deployment
+## 🤝 Contributing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-### `npm run build` fails to minify
+## 📄 License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Authors
+
+- **Devashri** - *Initial work* - [devashri26](https://github.com/devashri26)
+
+## 🙏 Acknowledgments
+
+- React.js community
+- Create React App team
+- Recharts library contributors
+- All contributors and supporters
+
+---
+
+**Finsmart Finances** - Your comprehensive financial management solution! 💰📊
