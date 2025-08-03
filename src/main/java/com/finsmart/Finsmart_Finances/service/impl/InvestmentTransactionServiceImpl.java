@@ -48,24 +48,62 @@ public class InvestmentTransactionServiceImpl implements InvestmentTransactionSe
 
     @Override
     public InvestmentTransactionDTO createTransaction(InvestmentTransactionRequest txReq) {
-        InvestmentGoal goal = goalrepo.findById(txReq.getGoalId())
-            .orElseThrow(() -> new RuntimeException("Goal not found"));
-        InvestmentTransaction transaction = new InvestmentTransaction();
-        transaction.setAmount(txReq.getAmount());
-        transaction.setMode(txReq.getMode());
-        transaction.setDateTime(LocalDateTime.parse(txReq.getDateTime()));
-        transaction.setNote(txReq.getNote());
-        transaction.setGoal(goal);
-        InvestmentTransaction saved = repo.save(transaction);
-        InvestmentTransactionDTO transactionDTO = converttoDTO(saved);
-        transactionDTO.setGoalname(goal.getGoalName());
-        transactionDTO.setGoalId(goal.getId());
-        return transactionDTO;
+        try {
+            System.out.println("Creating transaction with goalId: " + txReq.getGoalId());
+            
+            InvestmentGoal goal = goalrepo.findById(txReq.getGoalId())
+                .orElseThrow(() -> new RuntimeException("Goal not found with ID: " + txReq.getGoalId()));
+            
+            System.out.println("Found goal: " + goal.getGoalName());
+            
+            InvestmentTransaction transaction = new InvestmentTransaction();
+            transaction.setAmount(txReq.getAmount());
+            transaction.setMode(txReq.getMode());
+            transaction.setDateTime(LocalDateTime.parse(txReq.getDateTime()));
+            transaction.setNote(txReq.getNote());
+            transaction.setGoal(goal);
+            
+            System.out.println("About to save transaction: " + transaction);
+            
+            InvestmentTransaction saved = repo.save(transaction);
+            
+            System.out.println("Transaction saved with ID: " + saved.getId());
+            
+            InvestmentTransactionDTO transactionDTO = converttoDTO(saved);
+            transactionDTO.setGoalname(goal.getGoalName());
+            transactionDTO.setGoalId(goal.getId());
+            
+            System.out.println("Returning transaction DTO: " + transactionDTO);
+            
+            return transactionDTO;
+        } catch (Exception e) {
+            System.err.println("Error creating transaction: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Override
     public List<InvestmentTransactionDTO> getAllTransactions() {
         List<InvestmentTransaction> trans_list = repo.findAll();
+        List<InvestmentTransactionDTO> hh = new ArrayList<>(); 
+        
+        for(InvestmentTransaction t : trans_list) {
+        	InvestmentGoal goal  = t.getGoal();
+            InvestmentTransactionDTO transactionDTO = converttoDTO(t);
+            transactionDTO.setGoalname(goal.getGoalName());
+            transactionDTO.setGoalId(goal.getId());
+            
+            hh.add(transactionDTO);
+        	
+        }
+        
+        return hh;
+    }
+
+    @Override
+    public List<InvestmentTransactionDTO> getAllTransactionsByUser(Long userId) {
+        List<InvestmentTransaction> trans_list = repo.findByGoal_User_Id(userId);
         List<InvestmentTransactionDTO> hh = new ArrayList<>(); 
         
         for(InvestmentTransaction t : trans_list) {
@@ -108,6 +146,12 @@ public class InvestmentTransactionServiceImpl implements InvestmentTransactionSe
     @Override
     public void deleteTransaction(Long id) {
         repo.deleteById(id);
+    }
+
+    @Override
+    public void deleteTransactionsByGoalId(Long goalId) {
+        List<InvestmentTransaction> transactions = repo.findByGoal_Id(goalId);
+        repo.deleteAll(transactions);
     }
 
 	

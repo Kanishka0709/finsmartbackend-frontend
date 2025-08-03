@@ -16,5 +16,7 @@ public interface UserService extends UserDetailsService{
 	List<UserDTO> getAllUser();
 	UserDetails loadUserByUsername(String username) throws UsernameNotFoundException;
 	UserDTO updateUserByUsername(String username, UserDTO userDTO);
+	UserDTO getUserByUsername(String username);
+	User findUserByUsername(String username);
 
 }

@@ -4,6 +4,8 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +28,7 @@ import jakarta.validation.Valid;
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class StockController {
 
+    private static final Logger logger = LoggerFactory.getLogger(StockController.class);
     private final StockService stockService;
     private final UserRepository userRepository;
 

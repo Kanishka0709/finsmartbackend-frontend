@@ -44,9 +44,7 @@ public class InvestmentGoalServiceImpl implements InvestmentGoalService {
 	}
 	
 	public InvestmentGoalDTO converttoDTO(InvestmentGoal goal) {
-		InvestmentGoalDTO dto = MM.map(goal, InvestmentGoalDTO.class);
-		dto.setId(goal.getId());
-		return dto;
+		return MM.map(goal, InvestmentGoalDTO.class);
 	}
 	
 	public InvestmentGoal converttoEntity(InvestmentGoalDTO goalD) {
@@ -363,19 +361,6 @@ public class InvestmentGoalServiceImpl implements InvestmentGoalService {
 	            throw new BusinessException("Error fetching user: " + e.getMessage());
 	        }
 	    }
-
-	 @Override
-    public InvestmentGoalDTO updateGoal(Long id, InvestmentGoal updatedGoal) {
-        InvestmentGoal existing = insergoal.findById(id).orElseThrow();
-        if (updatedGoal.getGoalName() != null) existing.setGoalName(updatedGoal.getGoalName());
-        if (updatedGoal.getTargetAmount() != 0) existing.setTargetAmount(updatedGoal.getTargetAmount());
-        if (updatedGoal.getStartDate() != null) existing.setStartDate(updatedGoal.getStartDate());
-        if (updatedGoal.getEndDate() != null) existing.setEndDate(updatedGoal.getEndDate());
-        if (updatedGoal.getStatus() != null) existing.setStatus(updatedGoal.getStatus());
-        // Do not update user here for safety
-        InvestmentGoal saved = insergoal.save(existing);
-        return converttoDTO(saved);
-    }
 
 	
 }

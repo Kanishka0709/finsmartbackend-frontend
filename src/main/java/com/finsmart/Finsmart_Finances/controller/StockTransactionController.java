@@ -3,6 +3,8 @@ package com.finsmart.Finsmart_Finances.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -26,6 +28,7 @@ import com.finsmart.Finsmart_Finances.service.StockTransactionService;
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class StockTransactionController {
 
+    private static final Logger logger = LoggerFactory.getLogger(StockTransactionController.class);
     private final StockTransactionService stockTransactionService;
     @Autowired
     private UserRepository userRepository;

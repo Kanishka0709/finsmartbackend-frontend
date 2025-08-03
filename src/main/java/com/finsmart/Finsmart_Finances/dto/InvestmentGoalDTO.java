@@ -9,6 +9,10 @@ public class InvestmentGoalDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
+    private Boolean isSIP;
+    private String sipFrequency;
+    private double sipAmount;
+    private LocalDate nextScheduledInvestment;
     
     public InvestmentGoalDTO() {
         
@@ -70,5 +74,37 @@ public class InvestmentGoalDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getIsSIP() {
+        return isSIP;
+    }
+
+    public void setIsSIP(Boolean isSIP) {
+        this.isSIP = isSIP;
+    }
+
+    public String getSipFrequency() {
+        return sipFrequency;
+    }
+
+    public void setSipFrequency(String sipFrequency) {
+        this.sipFrequency = sipFrequency;
+    }
+
+    public double getSipAmount() {
+        return sipAmount;
+    }
+
+    public void setSipAmount(double sipAmount) {
+        this.sipAmount = sipAmount;
+    }
+
+    public LocalDate getNextScheduledInvestment() {
+        return nextScheduledInvestment;
+    }
+
+    public void setNextScheduledInvestment(LocalDate nextScheduledInvestment) {
+        this.nextScheduledInvestment = nextScheduledInvestment;
     }
 }

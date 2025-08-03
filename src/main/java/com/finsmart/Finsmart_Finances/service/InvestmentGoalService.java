@@ -32,8 +32,6 @@ public interface InvestmentGoalService {
     User findusingusername(String Username);
 
     void deleteGoal(Long id);
-    
-    InvestmentGoalDTO updateGoal(Long id, InvestmentGoal updatedGoal);
 	
 
 }

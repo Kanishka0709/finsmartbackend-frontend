@@ -5,11 +5,14 @@ import java.time.LocalDate;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -18,6 +21,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE) // or JOINED or TABLE_PER_CLASS
+@DiscriminatorColumn(name = "dtype")
 @Table(name = "investment_goals")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 
@@ -46,6 +51,8 @@ public class InvestmentGoal {
 	
 	@Column(length = 50)
 	private String status; // e.g., "In Progress", "Completed"
+	
+	
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)

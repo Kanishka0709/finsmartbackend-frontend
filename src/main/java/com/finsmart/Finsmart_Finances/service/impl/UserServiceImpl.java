@@ -1,8 +1,6 @@
 package com.finsmart.Finsmart_Finances.service.impl;
 
 import java.util.List;
-
-
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -12,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -141,6 +138,28 @@ public class UserServiceImpl implements UserService
 		User saved = userRepo.save(user);
 		log.info("User with username {} updated successfully", username);
 		return converttoDTO(saved);
+	}
+
+	@Override
+	public UserDTO getUserByUsername(String username) {
+		log.info("getUserByUsername() called with username={}", username);
+		User user = userRepo.findByUsername(username);
+		if (user == null) {
+			log.warn("User with username {} not found", username);
+			throw new UserNotfoundException(username);
+		}
+		return converttoDTO(user);
+	}
+
+	@Override
+	public User findUserByUsername(String username) {
+		log.info("findUserByUsername() called with username={}", username);
+		User user = userRepo.findByUsername(username);
+		if (user == null) {
+			log.warn("User with username {} not found", username);
+			throw new UserNotfoundException(username);
+		}
+		return user;
 	}
 
 }

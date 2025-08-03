@@ -33,10 +33,16 @@ public class SecurityConfig implements WebMvcConfigurer {
 	                .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
 	                .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
 	                .requestMatchers(HttpMethod.POST, "/login").permitAll() // Allow login
+	                .requestMatchers("/api/auth/login").permitAll() // Allow custom login
+	                .requestMatchers("/api/auth/logout").permitAll() // Allow logout
+	                .requestMatchers("/api/chatbot/**").permitAll() // Allow chatbot requests
+	                .requestMatchers("/goals/**").permitAll() // Allow investment goals requests
+	                .requestMatchers("/transactions/**").permitAll() // Allow investment transactions requests
 	                .requestMatchers("/stock-transactions/**").permitAll() // Allow all stock transaction requests for testing
 	                .anyRequest().authenticated()
 	            )
 	            .formLogin(form -> form
+	                .loginProcessingUrl("/login")
 	                .successHandler((request, response, authentication) -> {
 	                    response.setStatus(HttpServletResponse.SC_OK);
 	                    response.setContentType("application/json");
