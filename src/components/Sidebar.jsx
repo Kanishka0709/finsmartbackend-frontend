@@ -12,7 +12,7 @@ const menuItems = [
   { icon: <BsBarChart size={28} color="#0984e3" />, label: 'Stocks', route: '/stocks' },
   { icon: <MdOutlineAssessment size={28} color="#fdcb6e" />, label: 'Tax Profile', route: '/tax' },
   { icon: <FaFileAlt size={28} color="#636e72" />, label: 'Reports', route: '/reports' },
-  { icon: <FaCog size={28} color="#00b894" />, label: 'Settings', route: '/settings' },
+  { icon: <FaCog size={28} color="#00b894" />, label: 'My Account', route: '/settings' },
   { icon: <FaQuestionCircle size={28} color="#d63031" />, label: 'Help', route: '/help' },
 ];
 

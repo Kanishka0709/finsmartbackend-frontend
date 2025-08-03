@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
-import { FaChartLine, FaArrowUp, FaArrowDown, FaDollarSign, FaShoppingCart } from 'react-icons/fa';
+import { FaChartLine, FaArrowUp, FaArrowDown, FaDollarSign, FaShoppingCart, FaDownload } from 'react-icons/fa';
 import './StackPortfolio.css';
 import {
   getAllStockTransactions,
@@ -263,6 +263,280 @@ export default function StockPortfolio() {
     { label: 'Net Orders', value: netOrders, icon: <FaChartLine size={22} color="#7e8ce0" />, color: '#f0f2fd' },
   ];
 
+  // PDF Download Function
+  const downloadStockPDF = () => {
+    // Create a new window for PDF generation
+    const printWindow = window.open('', '_blank');
+    
+    // Get current date for the report
+    const currentDate = new Date().toLocaleDateString('en-IN');
+    
+    // Calculate additional metrics
+    const totalInvested = totalBuy;
+    const totalReturned = totalSell;
+    const netProfit = totalReturned - totalInvested;
+    const profitPercentage = totalInvested > 0 ? ((netProfit / totalInvested) * 100).toFixed(2) : '0.00';
+    
+    // Group transactions by stock
+    const stockTransactions = {};
+    transactions.forEach(tx => {
+      const stockSymbol = stocks.find(s => s.id === tx.stock?.id)?.symbol || 'Unknown';
+      if (!stockTransactions[stockSymbol]) {
+        stockTransactions[stockSymbol] = [];
+      }
+      stockTransactions[stockSymbol].push(tx);
+    });
+    
+    // Create HTML content for PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Finsmart Finances - Stock Portfolio Report</title>
+        <style>
+          body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            color: #333;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          .header h1 {
+            color: #1976d2;
+            margin: 0;
+            font-size: 28px;
+          }
+          .header p {
+            color: #666;
+            margin: 5px 0;
+          }
+          .summary {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            flex-wrap: wrap;
+          }
+          .summary-item {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+            margin: 10px;
+          }
+          .summary-item h3 {
+            margin: 0;
+            color: #1976d2;
+            font-size: 16px;
+          }
+          .summary-item p {
+            margin: 5px 0;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+          }
+          .section {
+            margin-bottom: 30px;
+          }
+          .section h2 {
+            color: #1976d2;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+          }
+          th {
+            background-color: #1976d2;
+            color: white;
+            font-weight: bold;
+          }
+          tr:nth-child(even) {
+            background-color: #f2f2f2;
+          }
+          .profit {
+            color: #00b894;
+            font-weight: bold;
+          }
+          .loss {
+            color: #d63031;
+            font-weight: bold;
+          }
+          .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+          }
+          @media print {
+            body { margin: 0; }
+            .summary { page-break-inside: avoid; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Finsmart Finances</h1>
+          <p>Stock Portfolio Report</p>
+          <p>Generated on: ${currentDate}</p>
+        </div>
+        
+        <div class="summary">
+          <div class="summary-item">
+            <h3>Total Stocks</h3>
+            <p>${totalStocks}</p>
+          </div>
+          <div class="summary-item">
+            <h3>Total Portfolio Value</h3>
+            <p>₹${totalValue.toLocaleString('en-IN')}</p>
+          </div>
+          <div class="summary-item">
+            <h3>Total Invested</h3>
+            <p>₹${totalInvested.toLocaleString('en-IN')}</p>
+          </div>
+          <div class="summary-item">
+            <h3>Total Returned</h3>
+            <p>₹${totalReturned.toLocaleString('en-IN')}</p>
+          </div>
+          <div class="summary-item">
+            <h3>Net Profit/Loss</h3>
+            <p class="${netProfit >= 0 ? 'profit' : 'loss'}">${netProfit >= 0 ? '+' : ''}₹${netProfit.toLocaleString('en-IN')}</p>
+          </div>
+          <div class="summary-item">
+            <h3>Profit %</h3>
+            <p class="${parseFloat(profitPercentage) >= 0 ? 'profit' : 'loss'}">${parseFloat(profitPercentage) >= 0 ? '+' : ''}${profitPercentage}%</p>
+          </div>
+        </div>
+        
+        <div class="section">
+          <h2>Stock Holdings</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Current Price</th>
+                <th>Exchange</th>
+                <th>Sector</th>
+                <th>Total Quantity</th>
+                <th>Total Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${stocks.map(stock => {
+                const stockTxs = transactions.filter(tx => tx.stock?.id === stock.id);
+                const buyQuantity = stockTxs.filter(tx => tx.transactionType === 'BUY').reduce((sum, tx) => sum + tx.quantity, 0);
+                const sellQuantity = stockTxs.filter(tx => tx.transactionType === 'SELL').reduce((sum, tx) => sum + tx.quantity, 0);
+                const netQuantity = buyQuantity - sellQuantity;
+                const totalValue = netQuantity * stock.currentPrice;
+                return `
+                  <tr>
+                    <td>${stock.symbol}</td>
+                    <td>₹${stock.currentPrice}</td>
+                    <td>${stock.exchange}</td>
+                    <td>${stock.sector}</td>
+                    <td>${netQuantity}</td>
+                    <td>₹${totalValue.toLocaleString('en-IN')}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="section">
+          <h2>Stock Transactions</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Stock</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Purchase Price</th>
+                <th>Current Price</th>
+                <th>Total Value</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${transactions.map(tx => {
+                const stockSymbol = stocks.find(s => s.id === tx.stock?.id)?.symbol || 'Unknown';
+                const totalValue = tx.quantity * tx.currentPrice;
+                const profit = tx.transactionType === 'SELL' ? (tx.currentPrice - tx.purchasePrice) * tx.quantity : 0;
+                return `
+                  <tr>
+                    <td>${stockSymbol}</td>
+                    <td>${tx.transactionType}</td>
+                    <td>${tx.quantity}</td>
+                    <td>₹${tx.purchasePrice}</td>
+                    <td>₹${tx.currentPrice}</td>
+                    <td>₹${totalValue.toLocaleString('en-IN')}</td>
+                    <td>${tx.transactionDate?.slice(0, 10) || 'N/A'}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="section">
+          <h2>Portfolio Breakdown by Sector</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Sector</th>
+                <th>Number of Stocks</th>
+                <th>Percentage</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${breakdownData.map(sector => {
+                const percentage = totalStocks > 0 ? ((sector.count / totalStocks) * 100).toFixed(1) : '0.0';
+                return `
+                  <tr>
+                    <td>${sector.name}</td>
+                    <td>${sector.count}</td>
+                    <td>${percentage}%</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="footer">
+          <p>This report was generated by Finsmart Finances</p>
+          <p>Total Stocks: ${totalStocks} | Total Transactions: ${transactions.length}</p>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    // Write content to the new window
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    
+    // Wait for content to load then print
+    printWindow.onload = function() {
+      printWindow.print();
+      printWindow.close();
+    };
+  };
+
   // Breakdown by Sector (Bar Chart)
   const sectorMap = {};
   stocks.forEach(stock => {
@@ -391,7 +665,28 @@ export default function StockPortfolio() {
         marginLeft: 'auto',
         marginRight: 'auto',
       }}>
-        <h2 style={{ fontWeight: 700, fontSize: 22, marginBottom: 18, color: '#1976d2' }}>Stock Transactions</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+          <h2 style={{ fontWeight: 700, fontSize: 22, margin: 0, color: '#1976d2' }}>Stock Transactions</h2>
+          <button 
+            onClick={downloadStockPDF}
+            style={{ 
+              background: '#1976d2', 
+              color: '#fff', 
+              border: 'none', 
+              borderRadius: 8, 
+              padding: '10px 20px', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '14px'
+            }}
+          >
+            <FaDownload size={16} />
+            Download PDF
+          </button>
+        </div>
         <hr style={{ marginBottom: 24, border: 'none', borderTop: '1px solid #e3eafc' }} />
         <form onSubmit={handleAdd} style={{ marginBottom: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
           <select

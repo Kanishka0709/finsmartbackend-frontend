@@ -1,4 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;900&family=Poppins:wght@700;800;900&family=Inter:wght@700;800;900&family=Orbitron:wght@400;700;900&display=swap');
+
+/* Custom Sipher-like Font Styling */
+@font-face {
+  font-family: 'Sipher';
+  src: local('Orbitron'), local('Arial Black'), local('Impact');
+  font-weight: normal;
+  font-style: normal;
+}
 
 .navbar-finance {
   font-family: 'Montserrat', Arial, sans-serif;
@@ -41,10 +49,11 @@
 
 .brand-name {
   color: #fff;
-  font-weight: 900;
-  letter-spacing: 1.5px;
-  font-size: 2.3rem;
-  text-shadow: 0 4px 16px rgba(25, 118, 210, 0.10);
+  font-family: 'Poppins', 'Arial Black', 'Impact', sans-serif;
+  font-weight: 800;
+  letter-spacing: 2px;
+  font-size: 2.5rem;
+  text-shadow: 0 4px 16px rgba(25, 118, 210, 0.15);
   line-height: 1.1;
   margin-left: 4px;
   transition: color 0.2s, text-shadow 0.2s, transform 0.2s;

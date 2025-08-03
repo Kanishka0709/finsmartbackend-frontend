@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { FaDollarSign, FaPiggyBank, FaWallet } from 'react-icons/fa';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from 'recharts';
+import { FaDollarSign, FaPiggyBank, FaWallet, FaDownload } from 'react-icons/fa';
 import './Expenses.css';
-import { getAllExpenses, addExpense, deleteExpense, updateExpense, getExpensesByMonth } from '../api/expenseApi';
+import { getAllExpenses, addExpense, deleteExpense, updateExpense, getExpensesByMonth, getExpensesByMonthRange } from '../api/expenseApi';
 import { getIncome, setOrUpdateIncome } from '../api/incomeApi';
 import { useNavigate } from 'react-router-dom';
 
@@ -30,6 +30,12 @@ export default function Expenses() {
   const [incomeInput, setIncomeInput] = useState('');
   const [incomeSuccess, setIncomeSuccess] = useState('');
   const [incomeError, setIncomeError] = useState('');
+  const [startMonth, setStartMonth] = useState('');
+  const [endMonth, setEndMonth] = useState('');
+  const [rangeYear, setRangeYear] = useState('');
+  const [chartStartDate, setChartStartDate] = useState('');
+  const [chartEndDate, setChartEndDate] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const user = JSON.parse(localStorage.getItem('user'));
   const userId = user?.id;
@@ -219,9 +225,193 @@ export default function Expenses() {
       ? value.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 })
       : '₹0.00';
 
+  // PDF Download Function
+  const downloadExpensesPDF = () => {
+    // Create a new window for PDF generation
+    const printWindow = window.open('', '_blank');
+    
+    // Get current date for the report
+    const currentDate = new Date().toLocaleDateString('en-IN');
+    
+    // Calculate totals
+    const totalExpense = displayExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalIncome = income && typeof income.amount === 'number' ? income.amount : 0;
+    const totalSavings = totalIncome - totalExpense;
+    
+    // Create HTML content for PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Finsmart Finances - Expense Report</title>
+        <style>
+          body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            color: #333;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          .header h1 {
+            color: #1976d2;
+            margin: 0;
+            font-size: 28px;
+          }
+          .header p {
+            color: #666;
+            margin: 5px 0;
+          }
+          .summary {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+          }
+          .summary-item {
+            text-align: center;
+          }
+          .summary-item h3 {
+            margin: 0;
+            color: #1976d2;
+            font-size: 18px;
+          }
+          .summary-item p {
+            margin: 5px 0;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+          }
+          th {
+            background-color: #1976d2;
+            color: white;
+            font-weight: bold;
+          }
+          tr:nth-child(even) {
+            background-color: #f2f2f2;
+          }
+          .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+          }
+          @media print {
+            body { margin: 0; }
+            .summary { page-break-inside: avoid; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Finsmart Finances</h1>
+          <p>Expense Report</p>
+          <p>Generated on: ${currentDate}</p>
+        </div>
+        
+        <div class="summary">
+          <div class="summary-item">
+            <h3>Total Income</h3>
+            <p>${formatINR(totalIncome)}</p>
+          </div>
+          <div class="summary-item">
+            <h3>Total Expenses</h3>
+            <p>${formatINR(totalExpense)}</p>
+          </div>
+          <div class="summary-item">
+            <h3>Total Savings</h3>
+            <p>${formatINR(totalSavings)}</p>
+          </div>
+        </div>
+        
+        <h2>Expense Details</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${displayExpenses.map(expense => `
+              <tr>
+                <td>${expense.expenseDate || 'N/A'}</td>
+                <td>${expense.category || 'N/A'}</td>
+                <td>${expense.description || 'N/A'}</td>
+                <td>${formatINR(expense.amount || 0)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div class="footer">
+          <p>This report was generated by Finsmart Finances</p>
+          <p>Total Records: ${displayExpenses.length}</p>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    // Write content to the new window
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    
+    // Wait for content to load then print
+    printWindow.onload = function() {
+      printWindow.print();
+      printWindow.close();
+    };
+  };
+
   const totalIncome = income && typeof income.amount === 'number' ? income.amount : 0;
   const totalExpense = displayExpenses.reduce((sum, e) => sum + e.amount, 0);
   const totalSavings = totalIncome - totalExpense;
+
+  // Calculate total expense for the chart date range
+  const getChartDateRangeTotal = () => {
+    if (!Array.isArray(displayExpenses)) return 0;
+    
+    let startDate, endDate;
+    if (chartStartDate && chartEndDate) {
+      startDate = new Date(chartStartDate);
+      endDate = new Date(chartEndDate);
+    } else {
+      // Default to last 30 days
+      endDate = new Date();
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - 29);
+    }
+
+    return displayExpenses.reduce((sum, expense) => {
+      if (!expense || !expense.expenseDate) return sum;
+      const expenseDate = new Date(expense.expenseDate);
+      if (expenseDate >= startDate && expenseDate <= endDate) {
+        return sum + (expense.amount || 0);
+      }
+      return sum;
+    }, 0);
+  };
+
+  const chartDateRangeTotal = getChartDateRangeTotal();
 
   const summaryCards = [
     { label: 'Total Income', value: formatINR(totalIncome), icon: null, color: '#eafaf1' },
@@ -229,13 +419,72 @@ export default function Expenses() {
     { label: 'Total Savings', value: formatINR(totalSavings), icon: <FaPiggyBank size={28} color="#00b894" />, color: '#f3f8fa' },
   ];
 
+  // Process data for day-wise expense chart with category breakdown
+  const processExpenseData = () => {
+    const expenseMap = {};
+    
+    // Ensure displayExpenses is an array
+    if (!Array.isArray(displayExpenses)) {
+      return { chartData: [], categories: [] };
+    }
+    
+    displayExpenses.forEach(expense => {
+      if (!expense || !expense.expenseDate || !expense.category) return;
+      
+      const date = expense.expenseDate;
+      if (!expenseMap[date]) {
+        expenseMap[date] = {};
+      }
+      if (!expenseMap[date][expense.category]) {
+        expenseMap[date][expense.category] = 0;
+      }
+      expenseMap[date][expense.category] += expense.amount || 0;
+    });
+
+    // Get date range for chart
+    let startDate, endDate;
+    if (chartStartDate && chartEndDate) {
+      startDate = new Date(chartStartDate);
+      endDate = new Date(chartEndDate);
+    } else {
+      // Default to last 30 days
+      endDate = new Date();
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - 29);
+    }
+
+    // Generate all dates in the range
+    const dateRange = [];
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      dateRange.push(currentDate.toISOString().split('T')[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Create chart data with all categories
+    const categories = [...new Set(displayExpenses.filter(e => e && e.category).map(e => e.category))];
+    const chartData = dateRange.map(date => {
+      const dayData = { date };
+      categories.forEach(category => {
+        dayData[category] = expenseMap[date]?.[category] || 0;
+      });
+      return dayData;
+    });
+
+    return { chartData, categories };
+  };
+
+  // Process data for charts with error handling
+  const { chartData, categories } = processExpenseData();
   const barData = displayExpenses.slice(0, 5).map(e => ({ name: e.category, value: e.amount }));
   const pieData = [
     { name: 'Spent', value: totalExpense, color: '#1976d2' },
     { name: 'Saved', value: totalSavings > 0 ? totalSavings : 0, color: '#00b894' }
   ];
-  const lineData = displayExpenses.map(e => ({ date: e.expenseDate, value: e.amount }));
   const pieColors = pieData.map(d => d.color);
+  
+  // Colors for different categories
+  const categoryColors = ['#1976d2', '#00b894', '#ff9800', '#e91e63', '#9c27b0', '#607d8b', '#795548', '#ff5722'];
 
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', width: '100%', padding: '32px 0' }}>
@@ -266,29 +515,185 @@ export default function Expenses() {
         {/* Pie Chart */}
         <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 2px 12px #0001', padding: 24, minWidth: 320, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 12 }}>Report Overview</div>
-          <ResponsiveContainer width="100%" height={180}>
-            <PieChart>
-              <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} label>
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
+          <div style={{ paddingTop: 32, width: '100%' }}>
+            <ResponsiveContainer width="100%" height={180}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="60%" // Move chart center down
+                  innerRadius={50}
+                  outerRadius={65} // Make donut a bit smaller
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${value}`}
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        {/* Line Chart */}
+        {/* Summary Stats Card */}
         <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 2px 12px #0001', padding: 24, minWidth: 320, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 12 }}>Expense Activity</div>
-          <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={lineData}>
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="value" stroke="#00b894" strokeWidth={3} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+          <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 12 }}>Expense Summary</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f8f9fa', borderRadius: 12 }}>
+              <span style={{ fontWeight: 600, color: '#333' }}>Total Categories:</span>
+              <span style={{ fontWeight: 700, color: '#1976d2', fontSize: 18 }}>{categories.length}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f8f9fa', borderRadius: 12 }}>
+              <span style={{ fontWeight: 600, color: '#333' }}>Total Expense:</span>
+              <span style={{ fontWeight: 700, color: '#00b894', fontSize: 18 }}>
+                ₹{chartDateRangeTotal.toLocaleString('en-IN')}
+              </span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f8f9fa', borderRadius: 12 }}>
+              <span style={{ fontWeight: 600, color: '#333' }}>Highest Category:</span>
+              <span style={{ fontWeight: 700, color: '#ff9800', fontSize: 18 }}>
+                {barData.length > 0 ? barData[0].name : 'N/A'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
+      
+      {/* Detailed Expense Activity Chart - 30 Days with Category Breakdown */}
+      <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 2px 12px #0001', padding: 24, margin: '0 24px 24px 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 16 }}>
+          <h2 style={{ fontWeight: 700, fontSize: 20, margin: 0 }}>Expense Activity by Category</h2>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <label style={{ fontSize: 14, fontWeight: 600, color: '#333' }}>Date Range:</label>
+            <input
+              type="date"
+              value={chartStartDate}
+              onChange={(e) => setChartStartDate(e.target.value)}
+              style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #e3eafc', fontSize: 14 }}
+            />
+            <span style={{ color: '#666' }}>to</span>
+            <input
+              type="date"
+              value={chartEndDate}
+              onChange={(e) => setChartEndDate(e.target.value)}
+              style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #e3eafc', fontSize: 14 }}
+            />
+            <label style={{ fontSize: 14, fontWeight: 600, color: '#333', marginLeft: 16 }}>Category:</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #e3eafc', fontSize: 14, minWidth: 120 }}
+            >
+              <option value="all">All Categories</option>
+              {categories && categories.map((category) => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => {
+                setChartStartDate('');
+                setChartEndDate('');
+                setSelectedCategory('all');
+              }}
+              style={{
+                background: '#e3eafc',
+                color: '#1976d2',
+                border: 'none',
+                borderRadius: 6,
+                padding: '6px 12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: 14
+              }}
+            >
+              Reset All
+            </button>
+          </div>
+        </div>
+        <div style={{ height: 400, width: '100%' }}>
+          {chartData && chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => {
+                    try {
+                      const date = new Date(value);
+                      return `${date.getDate()}/${date.getMonth() + 1}`;
+                    } catch (error) {
+                      return value;
+                    }
+                  }}
+                />
+                <YAxis 
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => `₹${value}`}
+                />
+                <Tooltip 
+                  formatter={(value, name) => [`₹${value}`, name]}
+                  labelFormatter={(label) => {
+                    try {
+                      const date = new Date(label);
+                      return date.toLocaleDateString('en-IN', { 
+                        day: 'numeric', 
+                        month: 'short', 
+                        year: 'numeric' 
+                      });
+                    } catch (error) {
+                      return label;
+                    }
+                  }}
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #ccc',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                />
+                {selectedCategory === 'all' ? (
+                  <>
+                    <Legend />
+                    {categories && categories.map((category, index) => (
+                      <Line
+                        key={category}
+                        type="monotone"
+                        dataKey={category}
+                        stroke={categoryColors[index % categoryColors.length]}
+                        strokeWidth={3}
+                        dot={{ r: 4, strokeWidth: 2, fill: '#fff' }}
+                        activeDot={{ r: 6, strokeWidth: 2 }}
+                        connectNulls={true}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <Line
+                    type="monotone"
+                    dataKey={selectedCategory}
+                    stroke={categoryColors[categories.indexOf(selectedCategory) % categoryColors.length]}
+                    strokeWidth={4}
+                    dot={{ r: 5, strokeWidth: 2, fill: '#fff' }}
+                    activeDot={{ r: 7, strokeWidth: 2 }}
+                    connectNulls={true}
+                  />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666', fontSize: 16 }}>
+              No expense data available for the last 30 days
+            </div>
+          )}
+        </div>
+        <div style={{ marginTop: 16, fontSize: 14, color: '#666', textAlign: 'center' }}>
+          Select a date range and category above to view your daily expenses. Choose "All Categories" to see all categories or select a specific one to focus on.
+        </div>
+      </div>
+      
       {/* Add Expense Form */}
       <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 2px 12px #0001', padding: 24, margin: '0 24px 24px 24px' }}>
         <h2 style={{ fontWeight: 700, fontSize: 20, marginBottom: 12 }}>Add Expense</h2>
@@ -325,11 +730,72 @@ export default function Expenses() {
           <button type="submit" style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', fontWeight: 700, cursor: 'pointer' }}>Filter</button>
           <button type="button" onClick={handleClearFilter} style={{ background: '#e3eafc', color: '#1976d2', border: 'none', borderRadius: 6, padding: '6px 16px', fontWeight: 700, cursor: 'pointer' }}>Clear</button>
         </form>
+        {/* Month Range Filter */}
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            if (!startMonth || !endMonth || !rangeYear) {
+              setError('Select start month, end month, and year.');
+              return;
+            }
+            setFiltering(true);
+            setError('');
+            setSuccess('');
+            getExpensesByMonthRange(startMonth, endMonth, rangeYear)
+              .then(res => {
+                setFilteredExpenses(Array.isArray(res.data) ? res.data : []);
+                setFiltering(false);
+              })
+              .catch(() => {
+                setError('Failed to filter expenses by range.');
+                setFilteredExpenses([]);
+                setFiltering(false);
+              });
+          }}
+          style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}
+        >
+          <label>Filter by Month Range:</label>
+          <select value={startMonth} onChange={e => setStartMonth(e.target.value)} style={{ padding: 6, borderRadius: 6, border: '1px solid #e3eafc' }}>
+            <option value="">Start Month</option>
+            {[...Array(12)].map((_, i) => <option key={i+1} value={i+1}>{i+1}</option>)}
+          </select>
+          <select value={endMonth} onChange={e => setEndMonth(e.target.value)} style={{ padding: 6, borderRadius: 6, border: '1px solid #e3eafc' }}>
+            <option value="">End Month</option>
+            {[...Array(12)].map((_, i) => <option key={i+1} value={i+1}>{i+1}</option>)}
+          </select>
+          <select value={rangeYear} onChange={e => setRangeYear(e.target.value)} style={{ padding: 6, borderRadius: 6, border: '1px solid #e3eafc' }}>
+            <option value="">Year</option>
+            {Array.from({length: 10}, (_, i) => new Date().getFullYear() - i).map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <button type="submit" style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 16px', fontWeight: 700, cursor: 'pointer' }}>Filter Range</button>
+          <button type="button" onClick={handleClearFilter} style={{ background: '#e3eafc', color: '#1976d2', border: 'none', borderRadius: 6, padding: '6px 16px', fontWeight: 700, cursor: 'pointer' }}>Clear</button>
+        </form>
         {filtering && <span>Filtering...</span>}
       </div>
       {/* Expenses Table */}
       <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 2px 12px #0001', padding: 24, margin: '0 24px' }}>
-        <h2 style={{ fontWeight: 700, fontSize: 22, marginBottom: 16 }}>All Expenses</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2 style={{ fontWeight: 700, fontSize: 22, margin: 0 }}>All Expenses</h2>
+          <button 
+            onClick={downloadExpensesPDF}
+            style={{ 
+              background: '#1976d2', 
+              color: '#fff', 
+              border: 'none', 
+              borderRadius: 8, 
+              padding: '10px 20px', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '14px'
+            }}
+          >
+            <FaDownload size={16} />
+            Download PDF
+          </button>
+        </div>
         {success && <div style={{ color: '#00b894', marginBottom: 8 }}>{success}</div>}
         {error && <div style={{ color: '#d63031', marginBottom: 8 }}>{error}</div>}
         {loading ? (

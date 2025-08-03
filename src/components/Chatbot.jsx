@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Chatbot.css';
-import axios from 'axios';
+import axiosInstance from '../api/axiosConfig';
+import ReactMarkdown from 'react-markdown';
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([
@@ -22,10 +23,11 @@ const Chatbot = () => {
     setInput('');
     setLoading(true);
     try {
-      const res = await axios.post('/api/chatbot', { message: input });
+      const res = await axiosInstance.post('/api/chatbot', { message: input });
       setMessages((msgs) => [...msgs, { sender: 'bot', text: res.data.reply }]);
     } catch (err) {
-      setMessages((msgs) => [...msgs, { sender: 'bot', text: 'Sorry, I could not process your request.' }]);
+      console.error('Chatbot API error:', err);
+      setMessages((msgs) => [...msgs, { sender: 'bot', text: 'Sorry, I could not process your request. Please try again later.' }]);
     } finally {
       setLoading(false);
     }
@@ -36,7 +38,13 @@ const Chatbot = () => {
       <div className="chatbot-header">Finsmart Assistant</div>
       <div className="chatbot-messages">
         {messages.map((msg, idx) => (
-          <div key={idx} className={`chatbot-message ${msg.sender}`}>{msg.text}</div>
+          <div key={idx} className={`chatbot-message ${msg.sender}`}>
+            {msg.sender === 'bot' ? (
+              <ReactMarkdown>{msg.text}</ReactMarkdown>
+            ) : (
+              msg.text
+            )}
+          </div>
         ))}
         <div ref={chatEndRef} />
       </div>

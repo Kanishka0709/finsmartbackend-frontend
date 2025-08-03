@@ -36,72 +36,148 @@ export default function Dashboard() {
 
   // Fetch totals for each overview
   useEffect(() => {
-    getAllExpenses().then(res => {
-      const expenses = res.data || [];
-      setTotalExpenses(expenses.reduce((sum, e) => sum + (e.amount || 0), 0));
-    });
-    getAllStocks().then(res => {
-      const stocks = res.data || [];
-      setTotalStocks(stocks.reduce((sum, s) => sum + (s.currentPrice || s.price || 0), 0));
-    });
-    getTaxProfiles().then(res => {
-      const profiles = res.data || [];
-      setTotalTax(profiles.reduce((sum, t) => sum + (t.taxPaid || 0), 0));
-    });
+    // Check if user is authenticated
+    const user = localStorage.getItem('user');
+    if (!user) {
+      console.log('User not authenticated, redirecting to login');
+      window.location.href = '/login';
+      return;
+    }
+
+    // Make API calls with error handling
+    getAllExpenses()
+      .then(res => {
+        const expenses = res.data || [];
+        setTotalExpenses(expenses.reduce((sum, e) => sum + (e.amount || 0), 0));
+      })
+      .catch(error => {
+        console.error('Error fetching expenses:', error);
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
+      });
+
+    getAllStocks()
+      .then(res => {
+        const stocks = res.data || [];
+        setTotalStocks(stocks.reduce((sum, s) => sum + (s.currentPrice || s.price || 0), 0));
+      })
+      .catch(error => {
+        console.error('Error fetching stocks:', error);
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
+      });
+
+    getTaxProfiles()
+      .then(res => {
+        const profiles = res.data || [];
+        setTotalTax(profiles.reduce((sum, t) => sum + (t.taxPaid || 0), 0));
+      })
+      .catch(error => {
+        console.error('Error fetching tax profiles:', error);
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
+      });
+
     // For investments, if you have a separate API, use it. Here, using incomes as a placeholder.
-    getIncome && getIncome().then(res => {
-      let investments = [];
-      if (Array.isArray(res.data)) {
-        investments = res.data;
-      } else if (res.data && Array.isArray(res.data.incomes)) {
-        investments = res.data.incomes;
-      } else if (res.data) {
-        investments = [res.data];
-      }
-      setTotalInvestments(investments.reduce((sum, i) => sum + (i.amount || 0), 0));
-    });
+    if (getIncome) {
+      getIncome()
+        .then(res => {
+          let investments = [];
+          if (Array.isArray(res.data)) {
+            investments = res.data;
+          } else if (res.data && Array.isArray(res.data.incomes)) {
+            investments = res.data.incomes;
+          } else if (res.data) {
+            investments = [res.data];
+          }
+          setTotalInvestments(investments.reduce((sum, i) => sum + (i.amount || 0), 0));
+        })
+        .catch(error => {
+          console.error('Error fetching income:', error);
+          if (error.response && error.response.status === 401) {
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+          }
+        });
+    }
   }, []);
 
   // Pie Chart: Expenses by category
   useEffect(() => {
-    getAllExpenses().then(res => {
-      const expenses = res.data || [];
-      // Group by category
-      const grouped = expenses.reduce((acc, curr) => {
-        const cat = curr.category || 'Other';
-        acc[cat] = (acc[cat] || 0) + (curr.amount || 0);
-        return acc;
-      }, {});
-      setPieData(Object.entries(grouped).map(([name, value]) => ({ name, value })));
-    }).catch(() => setPieData([]));
+    getAllExpenses()
+      .then(res => {
+        const expenses = res.data || [];
+        // Group by category
+        const grouped = expenses.reduce((acc, curr) => {
+          const cat = curr.category || 'Other';
+          acc[cat] = (acc[cat] || 0) + (curr.amount || 0);
+          return acc;
+        }, {});
+        setPieData(Object.entries(grouped).map(([name, value]) => ({ name, value })));
+      })
+      .catch(error => {
+        console.error('Error fetching expenses for pie chart:', error);
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        } else {
+          setPieData([]);
+        }
+      });
   }, []);
 
   // Line Chart: Stocks (mock time series if not present)
   useEffect(() => {
-    getAllStocks().then(res => {
-      const stocks = res.data || [];
-      // If stocks have a date or time, use it; else, mock by index
-      const data = stocks.map((s, idx) => ({
-        name: s.name || `Stock ${idx + 1}`,
-        Value: s.currentPrice || s.price || 0,
-        idx
-      }));
-      setLineData(data);
-    }).catch(() => setLineData([]));
+    getAllStocks()
+      .then(res => {
+        const stocks = res.data || [];
+        // If stocks have a date or time, use it; else, mock by index
+        const data = stocks.map((s, idx) => ({
+          name: s.name || `Stock ${idx + 1}`,
+          Value: s.currentPrice || s.price || 0,
+          idx
+        }));
+        setLineData(data);
+      })
+      .catch(error => {
+        console.error('Error fetching stocks for line chart:', error);
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        } else {
+          setLineData([]);
+        }
+      });
   }, []);
 
   // Bar Chart: Tax Profile (tax paid by year or type)
   useEffect(() => {
-    getTaxProfiles().then(res => {
-      const profiles = res.data || [];
-      // Group by financialYear (not year)
-      const grouped = profiles.reduce((acc, curr) => {
-        const year = curr.financialYear || 'Unknown';
-        acc[year] = (acc[year] || 0) + (curr.taxPaid || 0);
-        return acc;
-      }, {});
-      setBarData(Object.entries(grouped).map(([name, value]) => ({ name, value })));
-    }).catch(() => setBarData([]));
+    getTaxProfiles()
+      .then(res => {
+        const profiles = res.data || [];
+        // Group by financialYear (not year)
+        const grouped = profiles.reduce((acc, curr) => {
+          const year = curr.financialYear || 'Unknown';
+          acc[year] = (acc[year] || 0) + (curr.taxPaid || 0);
+          return acc;
+        }, {});
+        setBarData(Object.entries(grouped).map(([name, value]) => ({ name, value })));
+      })
+      .catch(error => {
+        console.error('Error fetching tax profiles for bar chart:', error);
+        if (error.response && error.response.status === 401) {
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        } else {
+          setBarData([]);
+        }
+      });
   }, []);
 
   const navigate = useNavigate();
@@ -128,16 +204,52 @@ export default function Dashboard() {
 
   const pieColors = ['#29b6f6', '#7e8ce0', '#90caf9', '#6c47e0', '#fbc02d', '#e57373'];
 
-  // Helper for Pie Chart label
+  // Helper for Pie Chart label - positioned outside the pie
   const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value }) => {
     const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
+    const radius = outerRadius + 30; // Position labels outside the pie
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    
+    // Determine text anchor based on position
+    const textAnchor = x > cx ? 'start' : 'end';
+    
     return (
-      <text x={x} y={y} fill="#222" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={14} fontWeight={600}>
-        {`${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-      </text>
+      <g>
+        {/* Line connecting pie slice to label */}
+        <line
+          x1={cx + (outerRadius + 5) * Math.cos(-midAngle * RADIAN)}
+          y1={cy + (outerRadius + 5) * Math.sin(-midAngle * RADIAN)}
+          x2={x - (textAnchor === 'start' ? 5 : -5)}
+          y2={y}
+          stroke="#666"
+          strokeWidth={1}
+        />
+        {/* Label text */}
+        <text 
+          x={x} 
+          y={y} 
+          fill="#333" 
+          textAnchor={textAnchor} 
+          dominantBaseline="central" 
+          fontSize={12} 
+          fontWeight={600}
+        >
+          {`${name}: ₹${value}`}
+        </text>
+        {/* Percentage text */}
+        <text 
+          x={x} 
+          y={y + 16} 
+          fill="#666" 
+          textAnchor={textAnchor} 
+          dominantBaseline="central" 
+          fontSize={10} 
+          fontWeight={500}
+        >
+          {`${(percent * 100).toFixed(0)}%`}
+        </text>
+      </g>
     );
   };
 
@@ -156,6 +268,17 @@ export default function Dashboard() {
 
   // Add a currency formatter
   const formatCurrency = (value) => `₹${value.toLocaleString('en-IN')}`;
+
+  const formatK = (value) => {
+    if (value >= 100000) {
+      const lakhs = (value / 100000).toFixed(1);
+      return lakhs.endsWith('.0') ? lakhs.slice(0, -2) + 'L' : lakhs + 'L';
+    } else if (value >= 1000) {
+      const thousands = (value / 1000).toFixed(1);
+      return thousands.endsWith('.0') ? thousands.slice(0, -2) + 'K' : thousands + 'K';
+    }
+    return value.toLocaleString('en-IN');
+  };
 
   return (
     <div style={{ background: '#f5f7fa', minHeight: '100vh', width: '100%', padding: '24px 0' }}>
@@ -245,16 +368,24 @@ export default function Dashboard() {
               <div style={{ fontWeight: 700, fontSize: 20, color: '#1976d2' }}>Expenses Breakdown</div>
               <div style={{ fontSize: 14, color: '#666', marginTop: 2 }}>This pie chart shows the distribution of your expenses by category.</div>
             </div>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320, minWidth: 0 }}>
-              <ResponsiveContainer width="100%" height={320} minWidth={200} minHeight={200}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400, minWidth: 0, padding: '20px' }}>
+              <ResponsiveContainer width="100%" height={400} minWidth={250} minHeight={250}>
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={renderPieLabel} labelLine={false}>
+                  <Pie 
+                    data={pieData} 
+                    dataKey="value" 
+                    nameKey="name" 
+                    cx="50%" 
+                    cy="50%" 
+                    outerRadius={80} 
+                    label={renderPieLabel} 
+                    labelLine={false}
+                  >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value, name) => [`₹${value}`, name]} />
-                  <Legend verticalAlign="bottom" height={36} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -279,39 +410,90 @@ export default function Dashboard() {
           </div>
         </div>
         {/* Improved Bar Chart Card */}
-        <div style={{ background: '#fff', borderRadius: 28, padding: 0, boxShadow: '0 2px 16px #0001', minHeight: 400, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start', flex: 1 }}>
-          <div style={{ padding: '18px 18px 0 18px', borderBottom: '1px solid #f0f0f0' }}>
+        <div style={{
+          background: '#fff',
+          borderRadius: 28,
+          padding: 0,
+          boxShadow: '0 2px 16px #0001',
+          minHeight: 400,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          flex: 1,
+          maxWidth: 480,
+          margin: '0 auto'
+        }}>
+          <div style={{ padding: '18px 18px 0 18px', borderBottom: '1px solid #f0f0f0', width: '100%', textAlign: 'center' }}>
             <div style={{ fontWeight: 700, fontSize: 20, color: '#1976d2', letterSpacing: 0.5 }}>Tax Trends by Year</div>
             <div style={{ fontSize: 14, color: '#666', marginTop: 2, marginBottom: 4 }}>
               Visualize your annual tax payments and spot trends at a glance.
             </div>
           </div>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320, minWidth: 0, position: 'relative', padding: 8 }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320, minWidth: 0, position: 'relative', padding: 8, width: '100%' }}>
             {barData.length === 0 ? (
               <div style={{ position: 'absolute', top: 60, left: 0, right: 0, textAlign: 'center', color: '#e57373', fontWeight: 600, fontSize: 16, zIndex: 2 }}>
                 No tax data available for the selected period.
               </div>
             ) : null}
-            <ResponsiveContainer width="100%" height={320} minWidth={200} minHeight={200}>
-              <BarChart data={barData} margin={{ top: 16, right: 24, left: 0, bottom: 24 }} barCategoryGap={40}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis dataKey="name" label={{ value: 'Year', position: 'insideBottom', offset: -10, fontWeight: 700, fill: '#1976d2' }} tick={{ fontSize: 14, fontWeight: 600, fill: '#333' }} />
-                <YAxis label={{ value: 'Tax Paid (₹)', angle: -90, position: 'insideLeft', offset: 10, fontWeight: 700, fill: '#1976d2' }} tick={{ fontSize: 14, fontWeight: 600, fill: '#333' }} tickFormatter={formatCurrency} />
-                <Tooltip contentStyle={{ background: '#fff', border: '1px solid #1976d2', borderRadius: 8, fontWeight: 600 }} formatter={(value, name) => [formatCurrency(value), 'Tax Paid']} labelStyle={{ color: '#1976d2', fontWeight: 700 }} />
-                {/* No legend for clean look */}
-                <Bar dataKey="value" fill="url(#taxBarGradient)" radius={[8, 8, 0, 0]} label={({ x, y, width, value }) => (
-                  <text x={x + width / 2} y={y - 10} fill="#1976d2" textAnchor="middle" fontSize={15} fontWeight={700} style={{ textShadow: '0 1px 4px #fff8' }}>
-                    {formatCurrency(value)}
-                  </text>
-                )} isAnimationActive shadow="true" />
-                <defs>
-                  <linearGradient id="taxBarGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#29b6f6" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#1976d2" stopOpacity={0.8} />
-                  </linearGradient>
-                </defs>
-              </BarChart>
-            </ResponsiveContainer>
+            <div style={{ width: '90%', margin: '0 auto' }}>
+              <ResponsiveContainer width="100%" height={320} minWidth={200} minHeight={200}>
+                <BarChart data={barData} margin={{ top: 40, right: 24, left: 70, bottom: 24 }} barCategoryGap={40}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                  <XAxis dataKey="name" label={{ value: 'Year', position: 'insideBottom', offset: -10, fontWeight: 700, fill: '#1976d2' }} tick={{ fontSize: 14, fontWeight: 600, fill: '#333' }} />
+                  <YAxis
+                    label={{
+                      value: 'Tax Paid (₹)',
+                      angle: -90,
+                      position: 'left',
+                      offset: 30, // Increased offset
+                      fontWeight: 700,
+                      fill: '#1976d2'
+                    }}
+                    tick={{ fontSize: 14, fontWeight: 600, fill: '#333' }}
+                    tickFormatter={formatK}
+                  />
+                  <Tooltip contentStyle={{ background: '#fff', border: '1px solid #1976d2', borderRadius: 8, fontWeight: 600 }} formatter={(value, name) => [formatK(value), 'Tax Paid']} labelStyle={{ color: '#1976d2', fontWeight: 700 }} />
+                  {/* No legend for clean look */}
+                  <Bar dataKey="value" fill="url(#taxBarGradient)" radius={[8, 8, 0, 0]} label={({ x, y, width, value }) => {
+                    const formattedValue = formatK(value);
+                    return (
+                      <g>
+                        {/* Background rectangle for better visibility */}
+                        <rect 
+                          x={x + width / 2 - 30} 
+                          y={y - 25} 
+                          width={60} 
+                          height={20} 
+                          fill="rgba(255, 255, 255, 0.9)" 
+                          rx={4}
+                          stroke="#1976d2"
+                          strokeWidth={1}
+                        />
+                        {/* Text label */}
+                        <text 
+                          x={x + width / 2} 
+                          y={y - 12} 
+                          fill="#1976d2" 
+                          textAnchor="middle" 
+                          fontSize={12} 
+                          fontWeight={700}
+                        >
+                          {formattedValue}
+                        </text>
+                      </g>
+                    );
+                  }} isAnimationActive shadow="true" />
+                  <defs>
+                    <linearGradient id="taxBarGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#29b6f6" stopOpacity={0.9} />
+                      <stop offset="100%" stopColor="#1976d2" stopOpacity={0.8} />
+                    </linearGradient>
+                  </defs>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       </div>

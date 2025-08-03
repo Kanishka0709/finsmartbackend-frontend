@@ -9,7 +9,7 @@ export const updateUserByUsername = (username, user) => axiosInstance.put(`/user
 
 export const loginUser = (username, password) =>
   axiosInstance.post(
-    '/login',
+    '/api/auth/login',
     new URLSearchParams({ username, password }),
     {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -22,6 +22,12 @@ export const forgotPassword = (email) =>
 
 export const resetPassword = (token, newPassword) =>
   axiosInstance.post('/api/auth/reset-password', { token, newPassword });
+
+export const logoutUser = () =>
+  axiosInstance.post('/api/auth/logout', {}, { withCredentials: true });
+
+export const checkAuth = () =>
+  axiosInstance.get('/api/auth/check', { withCredentials: true });
 
 
 

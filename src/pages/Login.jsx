@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Login.css';
 import { loginUser, getUsers } from '../api/userApi';
@@ -16,24 +16,57 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Load saved credentials on component mount
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem('rememberedCredentials');
+    if (savedCredentials) {
+      try {
+        const { username: savedUsername, rememberMe: savedRememberMe } = JSON.parse(savedCredentials);
+        setUsername(savedUsername);
+        setRememberMe(savedRememberMe);
+      } catch (error) {
+        console.error('Error loading saved credentials:', error);
+        // Clear corrupted data
+        localStorage.removeItem('rememberedCredentials');
+      }
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     try {
-      await loginUser(username, password);
-      // Only fetch user info after successful login
-      const usersRes = await getUsers();
-      const users = usersRes.data;
-      const found = users.find(u => u.username === username);
-      if (found) {
-        localStorage.setItem('user', JSON.stringify(found));
+      const loginResponse = await loginUser(username, password);
+      // The new login endpoint returns user data directly
+      if (loginResponse.data && loginResponse.data.user) {
+        localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+        
+        // Handle "Remember me" functionality
+        if (rememberMe) {
+          // Save credentials for future use
+          const credentialsToSave = {
+            username: username,
+            rememberMe: true
+          };
+          localStorage.setItem('rememberedCredentials', JSON.stringify(credentialsToSave));
+        } else {
+          // Clear saved credentials if "Remember me" is unchecked
+          localStorage.removeItem('rememberedCredentials');
+        }
+        
         navigate('/dashboard');
       } else {
-        setError('User not found after login.');
+        setError('Login successful but user data not received.');
       }
     } catch (err) {
-      setError('Invalid credentials. Please try again.');
+      console.error('Login error:', err);
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('Invalid credentials. Please try again.');
+      }
     }
   };
 
@@ -66,7 +99,11 @@ const Login = () => {
               required />
             <div className="login-form-row">
               <label className="login-remember">
-                <input type="checkbox" /> Remember me
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                /> Remember me
               </label>
               <span className="login-forgot" onClick={() => navigate('/forgot-password')} style={{ cursor: 'pointer', color: '#007bff' }}>Forgot password?</span>
             </div>
