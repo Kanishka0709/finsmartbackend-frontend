@@ -15,6 +15,7 @@ import Settings from '../pages/Settings';
 import Help from '../pages/Help';
 import ForgotPassword from '../pages/ForgotPassword';
 import ResetPassword from '../pages/ResetPassword';
+import ApiTest from '../components/ApiTest';
 
 // Auth wrapper
 import RequireAuth from '../components/RequireAuth';
@@ -28,6 +29,7 @@ function AppRoutes({ sidebarOpen, setSidebarOpen }) {
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/api-test" element={<ApiTest />} />
 
       {/* Protected Dashboard Layout Routes */}
       <Route
