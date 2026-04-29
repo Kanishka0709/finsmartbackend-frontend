@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17
+
+  build:
+    commands:
+      - echo "Building Spring Boot project..."
+      - mvn clean package
+
+artifacts:
+  files:
+    - target/Finsmart_Finances-0.0.1-SNAPSHOT.jar
+    - appspec.yaml
+    - scripts/*
