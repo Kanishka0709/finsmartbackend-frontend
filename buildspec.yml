@@ -2,11 +2,13 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      java: corretto17
+    commands:
+      - yum install maven -y
 
   build:
     commands:
+      - echo "Entering backend folder"
+      - cd backend
       - echo "Building Spring Boot project..."
       - mvn clean package -DskipTests
 
