@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "Stopping old app..."
-pkill -f 'java -jar' || true
+echo "Starting application..."
 
-echo "Starting new app..."
-nohup java -jar /opt/finsmart/*.jar > /opt/finsmart/app.log 2>&1 &
+nohup java -jar /opt/finsmart/FinSmart_Finances-0.0.1-SNAPSHOT.jar > app.log 2>&1 &
