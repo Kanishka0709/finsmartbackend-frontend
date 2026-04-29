@@ -12,6 +12,6 @@ phases:
 
 artifacts:
   files:
-    - target/Finsmart_Finances-0.0.1-SNAPSHOT.jar
-    - appspec.yaml
-    - scripts/*
+    - backend/target/Finsmart_Finances-0.0.1-SNAPSHOT.jar
+    - backend/appspec.yaml
+    - backend/scripts/*
