@@ -2,10 +2,10 @@ version: 0.0
 os: linux
 
 files:
-  - source: backend/target/Finsmart_Finances-0.0.1-SNAPSHOT.jar
+  - source: target/*.jar
     destination: /opt/finsmart/
 
 hooks:
   ApplicationStart:
-    - location: backend/scripts/start.sh
+    - location: scripts/start.sh
       timeout: 60
