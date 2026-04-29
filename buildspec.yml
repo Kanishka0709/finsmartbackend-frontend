@@ -8,6 +8,7 @@ phases:
 
   build:
     commands:
+      - chmod +x scripts/*.sh
       - echo "Building project..."
       - mvn clean package -DskipTests
 
