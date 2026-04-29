@@ -9,12 +9,11 @@ phases:
 
   build:
     commands:
-      - echo "Going into backend folder"
-      - cd backend
+      - echo "Building Spring Boot project..."
       - mvn clean package -DskipTests
 
 artifacts:
   files:
-    - backend/target/*.jar
-    - backend/appspec.yaml
-    - backend/scripts/*
+    - target/*.jar
+    - appspec.yaml
+    - scripts/*
