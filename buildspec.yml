@@ -3,17 +3,18 @@ version: 0.2
 phases:
   install:
     commands:
-      - yum install maven -y
+      - echo "Installing Maven..."
+      - apt-get update
+      - apt-get install -y maven
 
   build:
     commands:
-      - echo "Entering backend folder"
+      - echo "Going into backend folder"
       - cd backend
-      - echo "Building Spring Boot project..."
       - mvn clean package -DskipTests
 
 artifacts:
   files:
-    - backend/target/Finsmart_Finances-0.0.1-SNAPSHOT.jar
+    - backend/target/*.jar
     - backend/appspec.yaml
     - backend/scripts/*
